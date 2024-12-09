@@ -1,31 +1,25 @@
+# main.py
 import logging
 
 from aiogram import types, executor
-from config import bot, dp
+from config import bot, dp, Admins
 import logging
-import os
+from handlers import commands, echo, quiz
 
+async def on_startup(_):
+    for admin in Admins:
+        await bot.send_message(chat_id=795236182, text='Бот включен')
 
-@dp.message_handler(commands="start")
-async def start_handler(message):
-    await bot.send_message(
-        chat_id=message.from_user.id,
-        text=f"Hello! Your Telegram ID is {message.from_user.id}"
-    )
+async def on_shutdown(_):
+    for admin in Admins:
+        await bot.send_message(chat_id=795236182, text='Бот выключен')
 
-@dp.message_handler(commands=["meme"])
-async def meme_handler(message: types.Message):
-    photo_path = os.path.join('media', 'istockphoto-538665020-612x612.jpg')
-    with open(photo_path, 'rb') as photo:
-        await message.answer_photo(photo=photo, caption='Meme')
-
-#  =====================================================
-@dp.message_handler()
-async def echo_handler(message: types.Message):
-    await message.answer(message.text)
-
+commands.register_commands(dp)
+quiz.register_quiz_handlers(dp)
+echo.register_echo_handler(dp)
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=True, on_startup=on_startup,
+                           on_shutdown=on_shutdown)
