@@ -3,6 +3,9 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from buttons import cancel_markup, start_markup
+from aiogram.types import ReplyKeyboardRemove
+
 
 
 class FSMShop(StatesGroup):
@@ -74,8 +77,19 @@ async def load_submit(message: types.Message, state: FSMContext):
     else:
         await message.answer('Enter Yes or No.')
 
+async def cancel_fsm(message:types.Message, state:FSMContext):
+    current_state = await state.get_state()
+    kb = ReplyKeyboardRemove()
+
+    if current_state is not None:
+        await state.finish()
+        await message.answer('Canceled', reply_markup=kb)
+
 
 def register_fsm_sh_records_handlers(dp: Dispatcher):
+    dp.register_message_handler(cancel_fsm, Text(equals='отмена',
+                                                 ignore_case=True), state='*')
+
     dp.register_message_handler(start_fsm_sh_records, commands=['add_product'], state=None)
     dp.register_message_handler(load_model_name, state=FSMShop.model_name)
     dp.register_message_handler(load_size, state=FSMShop.size)
