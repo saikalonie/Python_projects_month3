@@ -1,3 +1,4 @@
+#fsm_store.py
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
@@ -14,6 +15,7 @@ class store_fsm(StatesGroup):
     product_id = State()
     info_product = State()
     photo = State()
+    collection = State()
     submit = State()
 
 async def start_fsm_store(message: types.Message):
@@ -73,7 +75,15 @@ async def load_photo(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['photo'] = message.photo[-1].file_id
 
+        await store_fsm.next()
+        await message.answer('Enter the collection name: ')
+
+async def load_collection(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+            data['collection'] = message.text
+
     await store_fsm.next()
+
     await message.answer(f'Is the data correct?', reply_markup=buttons.submit)
     await message.answer_photo(photo=data['photo'],
                                caption=f'Name - {data["name_product"]}\n'
@@ -81,6 +91,7 @@ async def load_photo(message: types.Message, state: FSMContext):
                                        f'Category - {data["category"]}\n'
                                        f'Product ID - {data["product_id"]}\n'
                                        f'Information of the product - {data["info_product"]}\n'
+                                       f'Collection - {data["collection"]}\n'
                                        f'Price- {data["price"]}\n')
 
 async def load_submit(message: types.Message, state: FSMContext):
@@ -98,15 +109,19 @@ async def load_submit(message: types.Message, state: FSMContext):
                 info_product=data['info_product'],
                 product_id=data['product_id']
             )
-            await message.answer('Ваши данные в базе!')
+            await main_db.sql_insert_collection_product(
+                product_id=data['product_id'],
+                collection=data['collection']
+            )
+            await message.answer('Your data in database!')
             await state.finish()
 
-    elif message.text == 'Нет':
-        await message.answer('Хорошо, отменено!')
+    elif message.text == 'No':
+        await message.answer('Ok, data is deleted!')
         await state.finish()
 
     else:
-        await message.answer('Введите Да или Нет!')
+        await message.answer('Enter Yes or No!')
 
 
 def store_fsm_handlers(dp: Dispatcher):
@@ -117,6 +132,7 @@ def store_fsm_handlers(dp: Dispatcher):
     dp.register_message_handler(load_price, state=store_fsm.price)
     dp.register_message_handler(load_product_id, state=store_fsm.product_id)
     dp.register_message_handler(load_info_product, state=store_fsm.info_product)
+    dp.register_message_handler(load_collection, state=store_fsm.collection)
     dp.register_message_handler(load_photo, state=store_fsm.photo, content_types=['photo'])
     dp.register_message_handler(load_submit, state=store_fsm.submit)
 
