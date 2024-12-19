@@ -6,6 +6,8 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from buttons import cancel_markup, start_markup
 from aiogram.types import ReplyKeyboardRemove
+from db import main_db
+
 
 
 class FSMReg(StatesGroup):
@@ -68,7 +70,14 @@ async def load_photo(message: types.Message, state: FSMContext):
 
 async def load_submit(message: types.Message, state: FSMContext):
     if message.text == 'Yes':
-        async with state.proxy() as data:
+        # async with state.proxy() as data:
+        #     await main_db.sql_insert_registered(
+        #         fullname=data['fullname'],
+        #         age=data['age'],
+        #         gender=data['gender'],
+        #         email=data['email'],
+        #         photo=data['photo']
+        #     )
             await message.answer('Your data in database!')
             await state.finish()
 
@@ -77,7 +86,7 @@ async def load_submit(message: types.Message, state: FSMContext):
         await state.finish()
 
     else:
-        await message.answer('Enter yeas or no!')
+        await message.answer('Enter Yes or No!')
 
 async def cancel_fsm(message:types.Message, state:FSMContext):
     current_state = await state.get_state()
