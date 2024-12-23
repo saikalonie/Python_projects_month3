@@ -51,11 +51,9 @@ def get_db_connection():
 def fetch_all_products():
     conn = get_db_connection()
     products = conn.execute("""
-    SELECT * FROM store s
-    INNER JOIN store_details sd 
-    ON s.product_id = sd.product_id
-    INNER JOIN main.collection_products cp 
-    on s.product_id = cp.id
+SELECT * FROM store s
+INNER JOIN store_details sd ON s.product_id = sd.product_id
+INNER JOIN main.collection_products cp on s.product_id = cp.id
     """).fetchall()
     conn.close()
     return products
